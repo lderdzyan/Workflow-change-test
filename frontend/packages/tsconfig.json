@@ -1,8 +1,0 @@
-{
-  "extends": "@repo/typescript-config/react-library.json",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "include": ["src", "../intranet-layout/src/components/errorBoundary.tsx"],
-  "exclude": ["node_modules", "dist"]
-}

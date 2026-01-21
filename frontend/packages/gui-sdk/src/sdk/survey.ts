@@ -5,12 +5,13 @@ import * as E from "fp-ts/Either";
 import { pipe } from "fp-ts/function";
 import { Answers, SurveyAnswer, SurveyAnswerProcessStatus } from "../models/SurveyAnswer";
 import { CacheKeys, getDataFromCache, putDataToCache } from "../cache";
-import { RequestError, doPost } from "../request";
+import { doPost } from "../request";
 import APIPaths from "../api-paths";
 import { ApplicationResponse, SurveyAnswerResponse, SurveyAnswersResponse, SurveysResponse } from "../dtos";
 import { Survey } from "../models";
 import { getCurrentPerson } from "./user";
 import { SurveyResponse } from "../dtos/SurveyResponse";
+import { RequestError } from "../request-error";
 
 export const getLastSurveyAnswerId = (): O.Option<string> => getDataFromCache(CacheKeys.LastSurveyAnswerId);
 
@@ -144,3 +145,4 @@ export const getSurveyById = (id: string): TE.TaskEither<RequestError, Survey> =
     doPost<SurveyResponse>(APIPaths.Survey.GetById, { id }),
     TE.map((response) => response.survey),
   );
+

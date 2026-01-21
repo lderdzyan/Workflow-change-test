@@ -1,6 +1,6 @@
 import * as TE from "fp-ts/TaskEither";
 import * as O from "fp-ts/Option";
-import { RequestError } from "../request";
+import { RequestError } from "../request-error";
 import { doPost } from "../request_jwt";
 import { PromoCode } from "../models/PromoCode";
 import { LoadPromoCodesResponse, VerifyPromoCodeResponse } from "../dtos";
@@ -17,3 +17,4 @@ export const getPromoCodeById = (id: string): TE.TaskEither<RequestError, O.Opti
 export const updatePromoCode = (id: string, promoCode: PromoCode): TE.TaskEither<RequestError, any> => doPost<any>(`/api/promo-service/codes/${id}`, promoCode);
 
 export const deletePromoCode = (id: string): TE.TaskEither<RequestError, O.Option<any>> => doPost<any>(`/api/promo-service/codes/${id}/delete`);
+

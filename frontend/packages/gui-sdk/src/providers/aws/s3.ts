@@ -3,7 +3,7 @@ import { pipe } from "fp-ts/function";
 import { CompleteMultipartUploadOutput, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { AWSCredential, S3FileUploadMetadata } from ".";
-import { NetworkError, RequestError } from "../../request";
+import { NetworkError, RequestError } from "../../request-error";
 
 const initS3Client = (region: string, credential: AWSCredential) =>
   new S3Client({
@@ -12,7 +12,7 @@ const initS3Client = (region: string, credential: AWSCredential) =>
       accessKeyId: credential.AccessKeyId,
       secretAccessKey: credential.SecretAccessKey,
       sessionToken: credential.SessionToken,
-    }
+    },
   });
 
 export const uploadToBucket = (file: File, fileId: string, metadata: S3FileUploadMetadata): TE.TaskEither<RequestError, CompleteMultipartUploadOutput> => {
@@ -29,7 +29,7 @@ export const uploadToBucket = (file: File, fileId: string, metadata: S3FileUploa
     TE.tryCatch(
       async () => upload.done(),
       (error) => new NetworkError((error as Error).message),
-    )
+    ),
   );
 };
 

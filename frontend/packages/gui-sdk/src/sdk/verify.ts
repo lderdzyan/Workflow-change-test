@@ -4,11 +4,12 @@ import { pipe } from "fp-ts/function";
 import { createId } from "@paralleldrive/cuid2";
 import APIPaths from "../api-paths";
 import { TOTPVerifyResponse, EmptyResponse } from "../dtos";
-import { doPost, RequestError } from "../request";
+import { doPost } from "../request";
 import { getCurrentPerson, setCurrentPerson } from "../sdk/user";
 import { createUser } from "../models/User";
 import { AuthLevel, Credential } from "../models";
 import { incrementPersonAuthLevel } from "./auth";
+import { RequestError } from "../request-error";
 
 type VerifyEmailCountryOptions = { email: string; country: string };
 export const verifyEmailCountry = (options: VerifyEmailCountryOptions): TE.TaskEither<RequestError, EmptyResponse> =>
@@ -16,18 +17,26 @@ export const verifyEmailCountry = (options: VerifyEmailCountryOptions): TE.TaskE
 
 type VerifyEmailOptions = { email: string; country: string; marketing?: boolean; isB2b2cFlow: boolean };
 export const verifyEmail = (options: VerifyEmailOptions): TE.TaskEither<RequestError, EmptyResponse> => {
+  const validEmail = options.email.trim().toLowerCase();
   const currentPerson = getCurrentPerson();
-  if (O.isNone(currentPerson.user)) {
-    currentPerson.user = O.some(createUser("", options.email.trim().toLowerCase(), options.marketing ?? false, options.country));
-  } else {
-    if (currentPerson.user.value.identity !== options.email.trim().toLowerCase()) {
-      currentPerson.user = O.some(createUser("", options.email.trim().toLowerCase(), options.marketing ?? false, options.country));
-      currentPerson.pid = createId();
-    }
-  }
-  setCurrentPerson({ ...currentPerson, authLevel: AuthLevel.Auth1, credentials: [Credential.EMAIL] });
 
-  return doPost<EmptyResponse>(APIPaths.Auth.VerifyEmail, { d: { email: options.email.trim().toLowerCase(), isB2b2c: options.isB2b2cFlow } });
+  if (O.isNone(currentPerson.user)) {
+    currentPerson.user = O.some(createUser("", validEmail, options.marketing ?? false, options.country));
+  } else if (currentPerson.user.value.identity !== validEmail) {
+    currentPerson.pid = createId();
+    currentPerson.user = O.some(createUser("", validEmail, options.marketing ?? false, options.country));
+  }
+
+  const updatedPerson = { ...currentPerson, authLevel: AuthLevel.Auth1, credentials: [Credential.EMAIL] };
+  return pipe(
+    doPost<EmptyResponse>(APIPaths.Auth.VerifyEmail, {
+      d: { email: validEmail, isB2b2c: options.isB2b2cFlow },
+    }),
+    TE.map((res) => {
+      setCurrentPerson(updatedPerson);
+      return res;
+    }),
+  );
 };
 
 type VerifyTOTPCode = {

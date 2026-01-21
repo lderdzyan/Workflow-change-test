@@ -1,8 +1,9 @@
 import { PublishResponse } from "../../dtos";
 import APIPaths from "../../api-paths";
 import { guiErrorQueue } from "../../init";
-import { RequestError, doPost } from "../../request";
+import { doPost } from "../../request";
 import { RequestAccess } from "../../request_jwt_e";
+import { RequestError } from "../../request-error";
 
 export type GuiError = {
   uri: string;
@@ -19,3 +20,4 @@ export async function reportRequestError(data: RequestError, uri: string) {
 }
 
 export const sendGuiErrorTask = (data: GuiError) => doPost<PublishResponse>(APIPaths.GuiError, { e: data }, false, RequestAccess.PUBLIC);
+

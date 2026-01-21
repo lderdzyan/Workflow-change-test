@@ -22,6 +22,7 @@ export function PurchaseIntermediaryContent({
   flow,
   handlePurchase,
   errors,
+  answerId,
 }: {
   title: string;
   subtitle: string;
@@ -34,6 +35,7 @@ export function PurchaseIntermediaryContent({
   flow: string;
   handlePurchase: () => void;
   errors?: string[];
+  answerId: string;
 }) {
   const { palette } = useTheme();
 
@@ -58,6 +60,7 @@ export function PurchaseIntermediaryContent({
           paymentLoading={paymentLoading}
           paymentFinished={paymentFinished}
           handlePurchase={handlePurchase}
+          answerId={answerId}
         />
         <ContactSupport align="center" />
         {errors && Boolean(errors.length) && <ErrorComponent errors={errors} />}

@@ -2,12 +2,13 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as TE from "fp-ts/TaskEither";
 import { PublishResponse } from "../../dtos";
-import { doPost, RequestError } from "../../request";
+import { doPost } from "../../request";
 import APIPathsV2 from "./api-paths";
 import { BuilderInitialSteps, SurveyType, VimeoVideoData } from "./models";
 import { EmptyResponse } from "../../dtos";
 import { BuilderResponse } from "./dtos/BuilderResponse";
 import { doGetE, doPostE, RequestAccess } from "../../request_jwt_e";
+import { RequestError } from "../../request-error";
 
 export const saveBuilderSurveyAnswer = (data: Record<string, number | string>, surveyId: string, finished = false): TE.TaskEither<RequestError, PublishResponse> =>
   doPost<PublishResponse>(APIPathsV2.Survey.SaveAnswer, { sa: { answer: data, surveyId, type: SurveyType.BUILDER, finished } });

@@ -4,9 +4,10 @@ import { pipe } from "fp-ts/function";
 import { Application, Package } from "../models";
 import APIPaths from "../api-paths";
 import { EmptyResponse, PackageByIdResponse, PackagesResponse } from "../dtos";
-import { RequestError, doPost } from "../request";
+import { doPost } from "../request";
 import { getApplicationByPath } from "./application";
 import { CacheKeys, getDataFromCache, putDataToCache, removeDataFromCache } from "../cache";
+import { RequestError } from "../request-error";
 
 export const getPackages = (additionalApplicationIds?: string[]): TE.TaskEither<RequestError, Package[]> =>
   pipe(
