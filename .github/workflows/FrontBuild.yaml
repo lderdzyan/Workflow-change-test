@@ -24,20 +24,13 @@ jobs:
         with:
           fetch-depth: 0 #to see all commits not only latest
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          node-version: 20
+          version: 10
 
-      - name: Install pnpm
-        run: |
-          cd frontend
-          npm install -g pnpm
-
-      - name: Install deps
-        run: |
-          cd frontend
-          pnpm install
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Build frontend
         run: |
