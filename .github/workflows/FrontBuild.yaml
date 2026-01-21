@@ -6,8 +6,7 @@ on:
       - dev
     paths:
       - 'frontend/**'
-    paths-ignore:
-      - '**/*.md'
+      - '!frontend/**/*.md'
     types:
       - closed
 permissions:
