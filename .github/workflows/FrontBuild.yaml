@@ -1,0 +1,110 @@
+name: build-frontend-turborepo-dev
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - 'frontend/**'
+    paths-ignore:
+      - '**/*.md'
+    types:
+      - closed
+permissions:
+  id-token: write
+  contents: read
+
+jobs: 
+  AppNames:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.get-frontend-apps.outputs.apps6  }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 #to see all commits not only latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        run: |
+          cd frontend
+          npm install -g pnpm
+
+      - name: Install deps
+        run: |
+          cd frontend
+          pnpm install
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          pnpm turbo build
+
+      - name: Get Frontend App Names
+        id: get-frontend-apps
+        run: |
+            cd frontend/apps
+            APP_ARRAY=()
+            for f in *; do
+            [ -e "$f" ] || continue
+            APP_ARRAY+=("\"$f\"")
+            done
+            IFS=,
+            JSON="[${APP_ARRAY[*]}]"
+            echo "apps=$JSON" >> $GITHUB_OUTPUT
+            echo $JSON
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/apps/**/build/
+
+  AppToS3:
+    needs: AppNames
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: ${{ fromJSON(needs.AppNames.outputs.apps) }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0    
+
+      - name: Download Build directories
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/apps
+
+      - name: Assume federated role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_FED_ROLE_ARN }}
+          role-session-name: Federated
+
+      - name: Assume worker role (chained)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_WORKER_ROLE_ARN }}
+          role-chaining: true
+          role-session-name: Worker
+      
+      - name: Zip builed Apps
+        run: |
+          cd frontend/apps/${{ matrix.app }}
+          zip ${{ matrix.app }}.zip build/
+
+      - name: Deploy Apps
+        run: |
+          cd frontend/apps/${{ matrix.app }}
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME}}/frontend/${{vars.FOLDER_NAME}}/"${{ matrix.app }}.zip
+      

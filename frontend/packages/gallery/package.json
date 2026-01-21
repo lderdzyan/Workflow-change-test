@@ -1,0 +1,35 @@
+{
+  "name": "@repo/gallery",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "lint": "eslint . ",
+    "generate:component": "turbo gen react-component"
+  },
+  "peerDependencies": {
+    "next": "^14",
+    "react": "^18",
+    "@emotion/styled": "^11.11.5",
+    "@mui/material": "^5.15.15"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@repo/utilities": "workspace:*",
+    "@repo/shared-components": "workspace:*",
+    "@turbo/gen": "^1.12.4",
+    "@types/node": "^20.11.24",
+    "@types/eslint": "^8.56.5",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3",
+    "@emotion/react": "^11.11.4"
+  },
+  "dependencies": {
+    "@mui/icons-material": "^5.14.3"
+  }
+}

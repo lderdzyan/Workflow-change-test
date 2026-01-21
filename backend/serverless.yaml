@@ -1,0 +1,13 @@
+service: myService
+
+provider:
+  name: aws
+package:
+  individually: true
+functions:
+  first:
+    handler: function1.handler
+  second:
+    handler: function2.handler
+  third: 
+    handler: function3.handler

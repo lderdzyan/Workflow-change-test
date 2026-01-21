@@ -1,0 +1,71 @@
+h2 {
+  margin: 24px 0;
+  color: #5e6062;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 500;
+}
+button.proceed {
+  background-color: #95c6be !important;
+  color: #fff !important;
+  border-radius: 4px;
+}
+button.dismiss,
+button.sms-verify,
+button.sms-send {
+  background-color: #ffb27d !important;
+  color: #fff !important;
+  border-radius: 4px;
+}
+.coupon-input button {
+  background-color: #95c6be !important;
+  color: #fff !important;
+}
+.summary-toggle h3 a {
+  font-size: 16px !important;
+  line-height: 19px;
+  color: #4e86c0 !important;
+}
+
+.horizontal-line {
+  height: 8px;
+  border-color: #7f8285;
+}
+.order-item h4,
+.order-item h3 {
+  font-size: 16px;
+  line-height: 19px;
+  font-weight: 400;
+  color: #454748;
+}
+.order-item {
+  padding-top: 16px;
+}
+.pure-form input[type="text"]:focus,
+.pure-form input[type="password"]:focus,
+.pure-form input[type="email"]:focus,
+.pure-form input[type="url"]:focus,
+.pure-form input[type="date"]:focus,
+.pure-form input[type="month"]:focus,
+.pure-form input[type="time"]:focus,
+.pure-form input[type="datetime"]:focus,
+.pure-form input[type="datetime-local"]:focus,
+.pure-form input[type="week"]:focus,
+.pure-form input[type="number"]:focus,
+.pure-form input[type="search"]:focus,
+.pure-form input[type="tel"]:focus,
+.pure-form input[type="color"]:focus,
+.pure-form select:focus,
+.pure-form textarea:focus {
+  border-color: #95c6be;
+}
+
+.wrapper {
+  margin-top: 40px;
+}
+
+.payment-form {
+  border: none !important;
+  border-top: 4px solid #95c6be !important;
+  border-radius: 4px 4px 0 0 !important;
+}
