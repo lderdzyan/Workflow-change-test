@@ -105,5 +105,5 @@ jobs:
       - name: Deploy Apps
         run: |
           cd frontend/apps/${{ matrix.app }}
-          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME}}/frontend/${{vars.FOLDER_NAME}}/"${{ matrix.app }}.zip
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME}}/frontend/${{vars.FOLDER_NAME}}/${{ matrix.app }}.zip
       

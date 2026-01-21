@@ -100,4 +100,4 @@ jobs:
       - name: Deploy Lambda
         run: |
           cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${{vars.FOLDER_NAME}}/"${{ matrix.lambda }}.zip
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${{vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
