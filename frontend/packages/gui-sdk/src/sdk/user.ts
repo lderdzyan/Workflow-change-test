@@ -7,8 +7,9 @@ import { incrementPersonAuthLevel } from "./auth";
 import { AuthLevel, Credential, Person, User, UserType } from "../models";
 import { CacheKeys, getDataFromCache, putDataToCache } from "../cache";
 import APIPaths from "../api-paths";
-import { RequestError, doPost } from "../request";
+import { doPost } from "../request";
 import { EmptyResponse, SignInResponse } from "../dtos";
+import { RequestError } from "../request-error";
 
 export const getCurrentPerson = (): Person =>
   pipe(

@@ -1,7 +1,7 @@
 import * as O from "fp-ts/Option";
 import { getLastSurveyAnswerId } from "@repo/gui-sdk";
 import { OnboardingFlow, OnboardingProgress, OnboardingStep } from "./types";
-import { MicroAppsBases } from "../../shared";
+import { MicroAppsBases, VerificationTypes } from "../../shared";
 import { PATHS } from "../../paths";
 import { SurveyPageTabs } from "../survey/surveyPageTabs";
 import { buildB2b2cUserRedirectionPath } from "../navigations";
@@ -13,6 +13,9 @@ export interface Direction {
 
 export const getDirectionByProgress = (progress: OnboardingProgress): { direction: Direction | null; allowedRoutes: Direction[] } => {
   if (!progress) return { direction: null, allowedRoutes: [] };
+  const purchaseVerificationPath = `#${PATHS.AUTH.VERIFICATION}?type=${VerificationTypes.purchase}`;
+  const finishRegistrationFirstStepPath = `#${PATHS.AUTH.FINISH_REGISTRATION}?step=start`;
+  const purchaseCompletedAllowedRoute = { base: MicroAppsBases.AUTH, path: `#${PATHS.AUTH.FINISH_REGISTRATION}?step=set-password` };
 
   switch (progress.flow) {
     case OnboardingFlow.MWI: {
@@ -29,13 +32,13 @@ export const getDirectionByProgress = (progress: OnboardingProgress): { directio
           return { direction: { path: `#${PATHS.MWI.SURVEY}?tab=${SurveyPageTabs.PURCHASE_LANDING}${surveyIdQueryParam}`, base: MicroAppsBases.MWI }, allowedRoutes: [] };
 
         case OnboardingStep.PACKAGE_CHOSEN:
-          return { direction: { path: `#${PATHS.AUTH.VERIFICATION}`, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
+          return { direction: { path: purchaseVerificationPath, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
 
         case OnboardingStep.EMAIL_VERIFIED:
           return { direction: { path: `#${PATHS.MWI.SURVEY}?tab=${SurveyPageTabs.PURCHASE_INTERMEDIARY}${surveyIdQueryParam}`, base: MicroAppsBases.MWI }, allowedRoutes: [] };
 
         case OnboardingStep.PURCHASE_COMPLETED:
-          return { direction: { path: `#${PATHS.AUTH.FINISH_REGISTRATION}?step=start`, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
+          return { direction: { path: finishRegistrationFirstStepPath, base: MicroAppsBases.AUTH }, allowedRoutes: [purchaseCompletedAllowedRoute] };
 
         case OnboardingStep.PASSWORD_CREATED:
           return { direction: buildB2b2cUserRedirectionPath(), allowedRoutes: [] };
@@ -48,13 +51,16 @@ export const getDirectionByProgress = (progress: OnboardingProgress): { directio
     case OnboardingFlow.BUILDER: {
       switch (progress.step) {
         case OnboardingStep.EMAIL_ENTERED:
-          return { direction: { path: `#${PATHS.AUTH.VERIFICATION}`, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
+          return { direction: { path: purchaseVerificationPath, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
 
         case OnboardingStep.EMAIL_VERIFIED:
           return { direction: { path: `#${PATHS.BUILDER.PURCHASE_INTERMEDIARY}`, base: MicroAppsBases.BUILDER }, allowedRoutes: [] };
 
         case OnboardingStep.PURCHASE_COMPLETED:
-          return { direction: { path: `#${PATHS.AUTH.FINISH_REGISTRATION}?step=start`, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
+          return {
+            direction: { path: finishRegistrationFirstStepPath, base: MicroAppsBases.AUTH },
+            allowedRoutes: [purchaseCompletedAllowedRoute],
+          };
 
         case OnboardingStep.PASSWORD_CREATED:
           return { direction: { path: "", base: MicroAppsBases.BUILDER }, allowedRoutes: [] };
@@ -79,13 +85,13 @@ export const getDirectionByProgress = (progress: OnboardingProgress): { directio
           };
 
         case OnboardingStep.PACKAGE_CHOSEN:
-          return { direction: { path: `#${PATHS.AUTH.VERIFICATION}`, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
+          return { direction: { path: purchaseVerificationPath, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
 
         case OnboardingStep.EMAIL_VERIFIED:
           return { direction: { path: `#${PATHS.BUILDER.PURCHASE_INTERMEDIARY}`, base: MicroAppsBases.BUILDER }, allowedRoutes: [] };
 
         case OnboardingStep.PURCHASE_COMPLETED:
-          return { direction: { path: `#${PATHS.AUTH.FINISH_REGISTRATION}?step=start`, base: MicroAppsBases.AUTH }, allowedRoutes: [] };
+          return { direction: { path: finishRegistrationFirstStepPath, base: MicroAppsBases.AUTH }, allowedRoutes: [purchaseCompletedAllowedRoute] };
 
         case OnboardingStep.PASSWORD_CREATED:
           return { direction: { path: "", base: MicroAppsBases.BUILDER }, allowedRoutes: [] };

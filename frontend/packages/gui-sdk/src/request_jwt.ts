@@ -1,12 +1,13 @@
 import * as TE from "fp-ts/TaskEither";
 import * as O from "fp-ts/Option";
-import { BackendError, EncryptError, NetworkError, ParserError, RequestError, RequestMethod } from "./request";
+import { RequestMethod } from "./request";
 import { apiPath } from "./utils";
 import { pipe } from "fp-ts/lib/function";
 import { getAccessToken, getCurrentPerson } from "./sdk/user";
 import { createId } from "@paralleldrive/cuid2";
 import { handleAuthErrorsFP } from "./auth_error_handling";
 import { RequestAccess } from "./request_jwt_e";
+import { BackendError, EncryptError, NetworkError, ParserError, RequestError } from "./request-error";
 
 export type JWTEncryptData = {
   iv: string;

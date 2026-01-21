@@ -46,7 +46,7 @@ export const getUserOnboardingCurrentProgress = (): OnboardingProgress | null =>
 };
 
 export const isDirectionInSameApp = (directionBase: MicroAppsBases): boolean => {
-  const currentBase = "/" + window.MS_APP_PATH;
+  const currentBase = removeTrailingSlashes("/" + (window.MS_APP_PATH ?? ""));
   return currentBase === removeTrailingSlashes(directionBase);
 };
 

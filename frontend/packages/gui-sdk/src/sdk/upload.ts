@@ -2,8 +2,9 @@ import * as TE from "fp-ts/TaskEither";
 import { pipe } from "fp-ts/function";
 import APIPaths from "../api-paths";
 import { FileUploadResponse, StorageProvider } from "../dtos/FileUploadResponse";
-import { RequestError, doPost } from "../request";
+import { doPost } from "../request";
 import { uploadToBucket } from "../providers";
+import { RequestError } from "../request-error";
 
 export enum FileType {
   AvatarImg = "avatarImg",
@@ -32,3 +33,4 @@ const doUpload = (file: File, response: FileUploadResponse): TE.TaskEither<Reque
 
   return TE.left(new Error("Wrong storage provider."));
 };
+

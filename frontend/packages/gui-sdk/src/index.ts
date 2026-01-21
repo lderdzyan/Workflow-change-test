@@ -61,7 +61,7 @@ export {
   IndicatorEvents as IndicatorEvents,
 } from "./sdk/publish/event-dispatch";
 
-export { ServerError, type RequestError, NetworkError, ParserError, BackendError } from "./request";
+export { ServerError, type RequestError, NetworkError, ParserError, BackendError } from "./request-error";
 export { loadAllCountries, loadSupportedCountries, loadNotAllowedCountries } from "./sdk/country";
 export { loadLanguages } from "./sdk/language";
 

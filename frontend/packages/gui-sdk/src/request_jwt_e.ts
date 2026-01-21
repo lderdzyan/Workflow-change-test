@@ -1,10 +1,11 @@
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import { getAccessToken } from "./sdk/user";
-import { BackendError, EncryptError, NetworkError, ParserError, RequestError, RequestMethod } from "./request";
+import { RequestMethod } from "./request";
 import { apiPath } from "./utils";
 import { generateMSToken, jsonParser, JWTEncryptData, key } from "./request_jwt";
 import { handleAuthErrorsE } from "./auth_error_handling";
+import { BackendError, EncryptError, NetworkError, ParserError, RequestError } from "./request-error";
 
 export enum RequestAccess {
   PUBLIC = "PUBLIC",

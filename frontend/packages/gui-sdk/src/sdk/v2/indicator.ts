@@ -3,10 +3,11 @@ import * as O from "effect/Option";
 import * as TE from "fp-ts/TaskEither";
 import { doPostE } from "../../request_jwt_e";
 import { EmptyResponse, PublishResponse } from "../../dtos";
-import { doPost, RequestError } from "../../request";
+import { doPost } from "../../request";
 import APIPathsV2 from "./api-paths";
 import { IndicatorSurveyCompleteResponse, IndicatorAnswerResponse } from "./dtos";
 import { SurveyType } from "./models";
+import { RequestError } from "../../request-error";
 
 export const saveIndicatorSurveyAnswer = (data: Record<string, number>, surveyId: string): TE.TaskEither<RequestError, PublishResponse> =>
   doPost<PublishResponse>(APIPathsV2.Survey.SaveAnswer, { sa: { answer: data, surveyId: surveyId, type: SurveyType.INDICATOR } });

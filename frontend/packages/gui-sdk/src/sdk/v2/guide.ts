@@ -1,9 +1,10 @@
 import * as TE from "fp-ts/TaskEither";
 import { pipe } from "fp-ts/function";
 import APIPathsV2 from "./api-paths";
-import { doPost, RequestError } from "../../request";
+import { doPost } from "../../request";
 import { MsoData } from "../../dtos";
 import { GuideCardData } from "./models";
+import { RequestError } from "../../request-error";
 
 export interface AvailableGuidesResponse extends MsoData {
   guideDetails: GuideCardData[];

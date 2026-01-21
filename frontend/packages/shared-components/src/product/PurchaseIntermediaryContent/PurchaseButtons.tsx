@@ -1,8 +1,8 @@
+import { Package } from "@repo/gui-sdk";
 import { IFrameEventNames, IFrameEventStatuses, IFrameEventTypes, dispatchEvent, generateIframeSource, calcPackagePrice, triggerClick } from "@repo/utilities";
 import { AppButtonsContent } from "../Containers/AppButtonsContent";
 import PurchaseButtonsLoading from "./PurchaseButtonsLoading";
 import { AppButton, LoadingComponent } from "../../shared";
-import { getCurrentPerson, Package } from "@repo/gui-sdk";
 
 import { Typography } from "@mui/material";
 
@@ -16,6 +16,7 @@ export default function PurchaseButtons({
   paymentFinished,
   flow,
   handlePurchase,
+  answerId,
 }: {
   subtitle: string;
   packageData: Package | undefined;
@@ -26,8 +27,8 @@ export default function PurchaseButtons({
   paymentFinished: boolean;
   flow: string;
   handlePurchase: () => void;
+  answerId: string;
 }) {
-  const person = getCurrentPerson();
   const price = packageData ? calcPackagePrice(packageData.products, packageData.discount).toString() : "";
 
   const handleClickPurchase = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -62,7 +63,7 @@ export default function PurchaseButtons({
                 packageId: packageData?.id || "",
                 price: price,
                 surveyId: surveyId,
-                answerId: person.pid,
+                answerId: answerId,
                 btnId: btnId,
               }),
               name: IFrameEventTypes.discounts,

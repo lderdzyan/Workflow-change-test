@@ -6,6 +6,7 @@ export const overrideLayoutContainerProps: OverrideLayoutContainerProps = (isSpe
   if (isSpecialPage || isIframePage) {
     return {
       padding: "0",
+      gap: "0",
       [`@media ${downTabletQuery}`]: {
         padding: "0",
       },

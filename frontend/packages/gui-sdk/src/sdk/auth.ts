@@ -4,11 +4,12 @@ import * as O from "fp-ts/Option";
 
 import { SignInResponse, EmptyResponse, PublishResponse } from "../dtos";
 import APIPaths from "../api-paths";
-import { doPost, RequestError } from "../request";
+import { doPost } from "../request";
 import { AuthLevel, Credential, Person } from "../models";
 import { fetchUserInfo, getCurrentPerson, setCurrentPerson, setPassword, updatePersonWithResponseData } from "../sdk/user";
 import { EmailCheckStatusResponse } from "../dtos/EmailCheckResponse";
 import { EmailCheckStatus } from "../models/Auth";
+import { RequestError } from "../request-error";
 
 type SignInOptions = { identity: string; password: string };
 export const signIn = (options: SignInOptions): TE.TaskEither<RequestError, SignInResponse> =>

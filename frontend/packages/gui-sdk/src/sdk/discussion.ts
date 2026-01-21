@@ -1,7 +1,7 @@
 import * as TE from "fp-ts/TaskEither";
 import { pipe } from "fp-ts/function";
 import { GuidedDiscussion } from "../models/GuidedDiscussion";
-import { RequestError, doPost } from "../request";
+import { doPost } from "../request";
 import APIPaths from "../api-paths";
 import {
   EmptyResponse,
@@ -13,6 +13,7 @@ import {
   SaveGuidedDiscussionInsidesResponse,
 } from "../dtos";
 import { DiscussionAction, GuidedDiscussionAction } from "../models";
+import { RequestError } from "../request-error";
 
 type DiscussionOptions = {
   guideId: string;
@@ -45,8 +46,7 @@ type RequestRescheduleOptions = {
   answerId: string;
   message: string;
 };
-export const requestReschedule = (options: RequestRescheduleOptions): TE.TaskEither<RequestError, EmptyResponse> =>
-  doPost<GuidedDiscussionResponse>(APIPaths.Guide.RequestReschedule, { d: options });
+export const requestReschedule = (options: RequestRescheduleOptions): TE.TaskEither<RequestError, EmptyResponse> => doPost<GuidedDiscussionResponse>(APIPaths.Guide.RequestReschedule, { d: options });
 
 export const getDiscussionsStatus = (ids: string[]): TE.TaskEither<RequestError, GuidedDiscussionStatusData[]> =>
   pipe(
@@ -71,3 +71,4 @@ export const saveGuidedDiscussionInsides = (options: SaveGuidedDiscussionInsides
     doPost<SaveGuidedDiscussionInsidesResponse>(APIPaths.Guide.SaveInsides, { d: options }),
     TE.map((response) => response.d),
   );
+

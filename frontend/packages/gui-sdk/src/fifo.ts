@@ -6,8 +6,8 @@ import { CacheKeys, getDataFromCache, putDataToCache } from "./cache";
 import { Mutex } from "async-mutex";
 import { GuiError, sendGuiErrorTask } from "./sdk/publish/gui-error";
 import { PageTracking, sendPageTrackingTask } from "./sdk/publish/page-tracking";
-import { RequestError } from "./request";
 import { EventTracking, sendEventTrackingTask } from "./sdk/publish/event-dispatch";
+import { RequestError } from "./request-error";
 
 export enum Queue {
   GuiError = "guiError",

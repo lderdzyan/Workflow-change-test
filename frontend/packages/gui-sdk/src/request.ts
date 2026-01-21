@@ -5,6 +5,7 @@ import { MsoData, RequestPayload, wrapPayload } from "./dtos";
 import { apiPath } from "./utils";
 import { handleAuthErrorsFP } from "./auth_error_handling";
 import { RequestAccess } from "./request_jwt_e";
+import { NetworkError, ParserError, RequestError, ServerError, ServerErrorResponse } from "./request-error";
 
 export enum RequestMethod {
   POST = "post",
@@ -30,63 +31,6 @@ export const doPut = <T extends MsoData>(url: string, data?: any, skipWrapping?:
 export const doGet = <T>(url: string, requestAccess: RequestAccess = RequestAccess.PRIVATE): TE.TaskEither<RequestError, T> => {
   return doDirectRequest<T>(url, { method: RequestMethod.GET, headers: { "Content-Type": "application/json" } }, requestAccess);
 };
-
-export class NetworkError extends Error {
-  public constructor(message = "") {
-    super(message);
-  }
-}
-
-export class ParserError extends Error {
-  public constructor(message = "") {
-    super(message);
-  }
-}
-
-export class DataNotFoundError extends Error {
-  public constructor(message = "") {
-    super(message);
-  }
-}
-export class EncryptError extends Error {
-  public constructor(message = "") {
-    super(message);
-  }
-}
-
-export interface ServerErrorResponse {
-  statusCode: number;
-  message: string;
-  error: string;
-}
-export class ServerError extends Error {
-  public readonly statusCode: number;
-  public readonly message: string;
-  public readonly error: string;
-  public constructor(response: ServerErrorResponse) {
-    super(response.message);
-
-    this.statusCode = response.statusCode;
-    this.message = response.message;
-    this.error = response.error;
-  }
-}
-
-interface ErrorDetails {
-  fields?: Array<{ key: string; error: string }>;
-}
-export interface BackendErrorResponse {
-  error: ErrorDetails;
-}
-export class BackendError extends Error {
-  public readonly error: ErrorDetails;
-  constructor(response: BackendErrorResponse) {
-    super();
-    this.error = response.error;
-  }
-}
-
-export type RequestError = NetworkError | ParserError | EncryptError | ServerError | BackendError | DataNotFoundError;
 
 function jsonParser<T = unknown>(response: Response): Promise<T> {
   return response.json();

@@ -1,9 +1,10 @@
 import * as TE from "fp-ts/TaskEither";
-import { RequestError, doPost } from "../request";
+import { doPost } from "../request";
 import { pipe } from "fp-ts/function";
 import APIPaths from "../api-paths";
 import { Application } from "../models";
 import { ApplicationResponse } from "../dtos";
+import { RequestError } from "../request-error";
 
 export const getApplicationByPath = (path?: string): TE.TaskEither<RequestError, Application> =>
   pipe(

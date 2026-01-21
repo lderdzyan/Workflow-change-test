@@ -1,10 +1,10 @@
 import * as TE from "fp-ts/TaskEither";
 import * as T from "fp-ts/Task";
 import { pipe } from "fp-ts/function";
-import { RequestError, doGet, doPost } from "../request";
+import { doGet, doPost } from "../request";
 import { EmptyResponse } from "../dtos";
 import APIPaths, { IPWhoISURL } from "../api-paths";
-import { reportRequestError } from "../index";
+import { reportRequestError, RequestError } from "../index";
 import { apiPath } from "../utils";
 import { IPWhoIsResponse } from "../dtos/IPWhoIsResponse";
 
