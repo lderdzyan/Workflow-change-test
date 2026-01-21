@@ -15,10 +15,7 @@ import {
   MicroAppsBases,
   BaseColors,
   isFullyLoggedIn,
-  getUserOnboardingCurrentProgress,
-  getEnforcedOnboardingRoute,
   performOnboardingRedirection,
-  isCurrentLocationAllowedForOnboarding,
 } from "@repo/utilities";
 import { getCurrentPerson, trackPage, getAndSetUserData } from "@repo/gui-sdk";
 import { LoadingComponent } from "../../../../shared/LoadingComponent";
@@ -28,7 +25,7 @@ import { fixIframes } from "../helpers/fixIframes";
 import { initializeAnalytics } from "../helpers/initializeAnalytics";
 import { isAppListMissing } from "../helpers/appListIsMissing";
 import { LayoutTypes } from ".";
-import { handleHalfOnboardedUserCase } from "../helpers/handleHalfOnboardedUserCase";
+import { resolveOnboardingRedirect } from "../helpers/resolveOnboardingRedirect";
 
 export default function LayoutBody({ children, layoutType, baseColors }: { children: any; layoutType: LayoutTypes; baseColors?: BaseColors }) {
   const location = useLocation();
@@ -59,26 +56,12 @@ export default function LayoutBody({ children, layoutType, baseColors }: { child
           const discussionModalData = await checkAndReturnDiscussionsModalData(navigate, isMWIApp);
           discussionModalData && queue.push(discussionModalData);
           setModalsQueue(queue);
-        } else {
-          if (O.isSome(person.user)) {
-            const onboardingProgress = getUserOnboardingCurrentProgress();
-            if (onboardingProgress) {
-              if (isCurrentLocationAllowedForOnboarding(onboardingProgress)) {
-                setRender(true);
-                return;
-              }
-              const direction = getEnforcedOnboardingRoute(onboardingProgress);
-              if (direction) {
-                performOnboardingRedirection(direction, navigate);
-                return;
-              }
-            } else {
-              const directionToRedirect = await handleHalfOnboardedUserCase();
-              if (O.isSome(directionToRedirect)) {
-                performOnboardingRedirection(directionToRedirect.value, navigate);
-                return;
-              }
-            }
+        } else if (O.isSome(person.user) && !person.user.value.isPasswordSet) {
+          const result = await resolveOnboardingRedirect();
+          if (O.isSome(result)) {
+            performOnboardingRedirection(result.value, navigate);
+          } else {
+            setRender(true);
           }
         }
         setRender(true);
@@ -92,18 +75,17 @@ export default function LayoutBody({ children, layoutType, baseColors }: { child
   }, []);
 
   useEffect(() => {
-    if (render) {
-      const onboardingProgress = getUserOnboardingCurrentProgress();
-      if (onboardingProgress) {
-        const direction = getEnforcedOnboardingRoute(onboardingProgress);
-        if (direction && !isCurrentLocationAllowedForOnboarding(onboardingProgress)) {
-          performOnboardingRedirection(direction, navigate);
-          return;
-        }
+    const person = getCurrentPerson();
+    if (isFullyLoggedIn() || layoutType !== LayoutTypes.main || !O.isSome(person.user) || person.user.value.isPasswordSet) return;
+    (async () => {
+      const result = await resolveOnboardingRedirect();
+      if (O.isSome(result)) {
+        performOnboardingRedirection(result.value, navigate);
+      } else {
         setRender(true);
       }
-    }
-  }, [location, render]);
+    })();
+  }, [location]);
 
   useEffect(() => {
     if (!currentModalName && modalsQueue.length) {
