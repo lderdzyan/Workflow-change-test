@@ -29,8 +29,10 @@ jobs:
         with:
           version: 10
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install deps
+        run: |
+          cd frontend
+          pnpm install
 
       - name: Build frontend
         run: |
