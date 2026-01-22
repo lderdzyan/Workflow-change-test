@@ -51,11 +51,19 @@ jobs:
             echo "apps=$JSON" >> $GITHUB_OUTPUT
             echo $JSON
 
-      - name: Upload Build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend/apps
+      - name: Upload build artifacts (per app)
+        run: |
+          for app in frontend/apps/*; do
+            if [ -d "$app/build" ]; then
+              appname=$(basename "$app")
+              echo "Uploading $appname"
+              gh run upload-artifact \
+                --name "frontend-$appname" \
+                "$app/build/*"
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   AppToS3:
     needs: AppNames
@@ -69,11 +77,11 @@ jobs:
         with:
           fetch-depth: 0    
 
-      - name: Download Build directories
+      - name: Download build for app
         uses: actions/download-artifact@v4
         with:
-          name: frontend-build
-          path: frontend/apps/
+          name: frontend-${{ matrix.app }}
+          path: frontend/apps/${{ matrix.app }}/build
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
@@ -93,7 +101,7 @@ jobs:
       - name: Zip builed Apps
         run: |
           cd frontend/apps/${{ matrix.app }}
-          zip ${{ matrix.app }}.zip build/
+          zip -r ${{ matrix.app }}.zip build/
 
       - name: Deploy Apps
         run: |
