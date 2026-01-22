@@ -63,7 +63,7 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          pnpm run build --filter=${{ matrix.app }}
+          pnpm turbo build --filter=${{ matrix.app }}
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
