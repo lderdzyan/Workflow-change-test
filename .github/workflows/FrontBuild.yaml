@@ -10,9 +10,8 @@ on:
       - '!frontend/**/*.md'
     types:
       - closed
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [created] 
 
 permissions:
   id-token: write
@@ -20,7 +19,7 @@ permissions:
 
 jobs: 
   AppNames:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'release'
     runs-on: ubuntu-latest
     outputs:
       apps: ${{ steps.get-frontend-apps.outputs.apps }}
@@ -32,10 +31,10 @@ jobs:
           ref: dev
 
       - name: Checkout release tag
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'release'
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Checkout hotfix branch
         if: startsWith(github.ref, 'refs/heads/hotfix-')
@@ -109,13 +108,13 @@ jobs:
           aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${{ vars.FOLDER_NAME}}/${{ matrix.app }}.zip
 
       - name: Deploy Apps (tags)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'release'
         run: |
           cd frontend/apps/${{ matrix.app }}
-          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${GITHUB_REF#refs/tags/}/${{ matrix.app }}.zip
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${{ github.event.release.tag_name }}/${{ matrix.app }}.zip
 
       - name: Deploy Apps (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
           cd frontend/apps/${{ matrix.app }}
-          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${GITHUB_REF#refs/heads/hotfix-}/${{ matrix.app }}.zip
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${GITHUB_REF#refs/h
