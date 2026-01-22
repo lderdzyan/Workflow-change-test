@@ -22,21 +22,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Install deps
-        run: |
-          cd frontend
-          pnpm install
-
-      - name: Build frontend
-        run: |
-          cd frontend
-          pnpm turbo build
-
       - name: Get Frontend App Names
         id: get-frontend-apps
         run: |
@@ -51,19 +36,6 @@ jobs:
             echo "apps=$JSON" >> $GITHUB_OUTPUT
             echo $JSON
 
-      - name: Upload build artifacts (per app)
-        run: |
-          for app in frontend/apps/*; do
-            if [ -d "$app/build" ]; then
-              appname=$(basename "$app")
-              echo "Uploading $appname"
-              gh run upload-artifact \
-                --name "frontend-$appname" \
-                "$app/build/*"
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ github.token }}
 
   AppToS3:
     needs: AppNames
@@ -72,16 +44,26 @@ jobs:
       matrix:
         app: ${{ fromJSON(needs.AppNames.outputs.apps) }}
     steps:
+
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0    
+          fetch-depth: 0   
 
-      - name: Download build for app
-        uses: actions/download-artifact@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          name: frontend-${{ matrix.app }}
-          path: frontend/apps/${{ matrix.app }}/build
+          version: 10
+
+      - name: Install deps
+        run: |
+          cd frontend
+          pnpm install
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          pnpm turbo build --filter=${{ matrix.app }}
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
