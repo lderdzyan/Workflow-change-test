@@ -1,4 +1,4 @@
-name: build-backend-dev
+name: build-backend
 
 on:
   pull_request:
@@ -7,8 +7,13 @@ on:
     paths:
       - 'backend/**'
       - '!backend/**/*.md'
+      - 'hotfix-*'
     types:
       - closed
+  push:
+    tags:
+      - 'v*' 
+
 permissions:
   id-token: write
   contents: read
@@ -20,7 +25,23 @@ jobs:
     outputs:
       lambda-names: ${{ steps.get-lambdas.outputs.names }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout dev
+        if: github.ref == 'refs/heads/dev'
+        uses: actions/checkout@v6
+        with:
+          ref: dev
+
+      - name: Checkout release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Checkout hotfix branch
+        if: startsWith(github.ref, 'refs/heads/hotfix-')
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -98,6 +119,19 @@ jobs:
           role-session-name: Secondary
 
       - name: Deploy Lambda
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd backend/lambdas/
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${GITHUB_REF#refs/tags/}/${{ matrix.lambda }}.zip
+
+      - name: Deploy Lambda
+        if: github.ref == 'refs/heads/dev'
         run: |
           cd backend/lambdas/
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${{vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
+
+      - name: Deploy Lambda (hotfix)
+        if: startsWith(github.ref, 'refs/heads/hotfix-')
+        run: |
+          cd backend/lambdas/
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/hotfix-}/${{ matrix.lambda }}.zip
