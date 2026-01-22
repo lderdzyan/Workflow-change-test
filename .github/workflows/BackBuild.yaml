@@ -10,9 +10,8 @@ on:
       - 'hotfix-*'
     types:
       - closed
-  push:
-    tags:
-      - 'v*' 
+  release:
+    types: [created] 
 
 permissions:
   id-token: write
@@ -20,7 +19,7 @@ permissions:
 
 jobs:
   buildLambdas:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || github.event_name == 'release'
     runs-on: ubuntu-latest
     outputs:
       lambda-names: ${{ steps.get-lambdas.outputs.names }}
@@ -32,10 +31,10 @@ jobs:
           ref: dev
 
       - name: Checkout release tag
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'release'
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Checkout hotfix branch
         if: startsWith(github.ref, 'refs/heads/hotfix-')
@@ -119,10 +118,10 @@ jobs:
           role-session-name: Secondary
 
       - name: Deploy Lambda
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'release'
         run: |
           cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${GITHUB_REF#refs/tags/}/${{ matrix.lambda }}.zip
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda
         if: github.ref == 'refs/heads/dev'
