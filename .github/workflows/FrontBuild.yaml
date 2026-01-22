@@ -1,14 +1,19 @@
-name: build-frontend-turborepo-dev
+name: build-frontend-turborepo
 
 on:
   pull_request:
     branches:
       - dev
+      - 'hotfix-*'
     paths:
       - 'frontend/**'
       - '!frontend/**/*.md'
     types:
       - closed
+  push:
+    tags:
+      - 'v*'
+
 permissions:
   id-token: write
   contents: read
@@ -18,24 +23,39 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
-      apps: ${{ steps.get-frontend-apps.outputs.apps  }}
+      apps: ${{ steps.get-frontend-apps.outputs.apps }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout dev
+        if: github.ref == 'refs/heads/dev'
+        uses: actions/checkout@v6
+        with:
+          ref: dev
+
+      - name: Checkout release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Checkout hotfix branch
+        if: startsWith(github.ref, 'refs/heads/hotfix-')
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
 
       - name: Get Frontend App Names
         id: get-frontend-apps
         run: |
-            cd frontend/apps
-            APP_ARRAY=()
-            for f in *; do
-              [ -e "$f" ] || continue
-              APP_ARRAY+=("\"$f\"")
-            done
-            IFS=,
-            JSON="[${APP_ARRAY[*]}]"
-            echo "apps=$JSON" >> $GITHUB_OUTPUT
-            echo $JSON
-
+          cd frontend/apps
+          APP_ARRAY=()
+          for f in *; do
+            [ -e "$f" ] || continue
+            APP_ARRAY+=("\"$f\"")
+          done
+          IFS=,
+          JSON="[${APP_ARRAY[*]}]"
+          echo "apps=$JSON" >> $GITHUB_OUTPUT
+          echo $JSON
 
   AppToS3:
     needs: AppNames
@@ -44,11 +64,8 @@ jobs:
       matrix:
         app: ${{ fromJSON(needs.AppNames.outputs.apps) }}
     steps:
-
       - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0   
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -79,14 +96,26 @@ jobs:
           role-to-assume: ${{ secrets.AWS_WORKER_ROLE_ARN }}
           role-chaining: true
           role-session-name: Secondary
-      
-      - name: Zip builed Apps
+
+      - name: Zip built Apps
         run: |
           cd frontend/apps/${{ matrix.app }}
           zip -r ${{ matrix.app }}.zip build/
 
-      - name: Deploy Apps
+      - name: Deploy Apps (dev)
+        if: github.ref == 'refs/heads/dev'
         run: |
           cd frontend/apps/${{ matrix.app }}
-          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME}}/frontend/${{vars.FOLDER_NAME}}/${{ matrix.app }}.zip
-      
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${{ vars.FOLDER_NAME}}/${{ matrix.app }}.zip
+
+      - name: Deploy Apps (tags)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd frontend/apps/${{ matrix.app }}
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${GITHUB_REF#refs/tags/}/${{ matrix.app }}.zip
+
+      - name: Deploy Apps (hotfix)
+        if: startsWith(github.ref, 'refs/heads/hotfix-')
+        run: |
+          cd frontend/apps/${{ matrix.app }}
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${GITHUB_REF#refs/heads/hotfix-}/${{ matrix.app }}.zip
