@@ -21,8 +21,6 @@ jobs:
       apps: ${{ steps.get-frontend-apps.outputs.apps  }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0 #to see all commits not only latest
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -53,11 +51,11 @@ jobs:
             echo "apps=$JSON" >> $GITHUB_OUTPUT
             echo $JSON
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Download Build artifacts
+        uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: frontend/apps/**/build/
+          path: frontend/apps
 
   AppToS3:
     needs: AppNames
@@ -75,7 +73,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: frontend/apps
+          path: frontend/apps/**/build/
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
