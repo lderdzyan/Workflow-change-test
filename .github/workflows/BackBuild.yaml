@@ -134,4 +134,4 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
           cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/hotfix-}/${{ matrix.lambda }}.zip
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip
