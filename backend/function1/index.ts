@@ -4,7 +4,7 @@ export const handler = async () => {
 <<<<<<< HEAD
     body: JSON.stringify('Hello from Lambda!6666'),
 =======
-    body: JSON.stringify('Hello from Lambda!'),
+    body: JSON.stringify('Hello from L    ambda!'),
 >>>>>>> 02c0ce7 (Test)
   };
   return response;
