@@ -63,11 +63,15 @@ jobs:
           mkdir -p lambdas
           cp ./.serverless/*.zip lambdas/
 
-      - name: Upload Lambda folder
-        uses: actions/upload-artifact@v6
-        with:
-          name: lambda-folder
-          path: backend/lambdas/*
+      - name: Upload Lambda ZIPs individually
+        run: |
+          cd backend/lambdas
+          files=$(ls)
+          echo "FILES=$files" >> $GITHUB_ENV
+          for file in $FILES; do
+            echo "Uploading $file"
+            gh workflow upload-artifact --name "$file" --path "./$file" || echo "Failed"
+          done
 
       - name: Get Lambda names
         id: get-lambdas
@@ -93,14 +97,18 @@ jobs:
         lambda: ${{ fromJSON(needs.buildLambdas.outputs.lambda-names) }}
     steps:
 
-      - name: Download Lambda folder
+      - name: Download Lambda
         uses: actions/download-artifact@v4
         with:
-          name: lambda-folder
-          path: ${{ matrix.lambda }}.zip
+          name: ${{ matrix.lambda }}.zip
+          path: .
+          
       - name: Get Lambda names
         run: |
-          ls
+          ll
+          cd backend && ll
+          cd lambdas && ll
+
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -119,15 +127,17 @@ jobs:
       - name: Deploy Lambda (dev)
         if: github.ref == 'refs/heads/dev'
         run: |
+          cd backend/lambdas/
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (release tag)
         if: github.event_name == 'release'
         run: |
-
+          cd backend/lambdas/
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
+          cd backend/lambdas/
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip
