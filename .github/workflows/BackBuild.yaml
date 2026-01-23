@@ -117,17 +117,15 @@ jobs:
       - name: Deploy Lambda (dev)
         if: github.ref == 'refs/heads/dev'
         run: |
-          cd lambdas/
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (release tag)
         if: github.event_name == 'release'
         run: |
-          cd lambdas/
+
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
-          cd lambdas/
           aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip
