@@ -64,7 +64,7 @@ jobs:
           cp ./.serverless/*.zip lambdas/
 
       - name: Upload Lambda folder
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lambda-folder
           path: backend/lambdas/*.zip
