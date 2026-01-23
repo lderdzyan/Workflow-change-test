@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: lambda-folder
-          path: backend/lambdas/*.zip
+          path: backend/lambdas/
 
       - name: Get Lambda names
         id: get-lambdas
@@ -97,7 +97,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: lambda-folder
-          path: lambdas/${{ matrix.lambda }}
+          path: ${{ matrix.lambda }}
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
