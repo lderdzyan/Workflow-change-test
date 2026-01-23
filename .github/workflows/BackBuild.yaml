@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: lambda-folder
-          path: backend/lambdas/*.zip
+          path: backend/lambdas/*
 
       - name: Get Lambda names
         id: get-lambdas
