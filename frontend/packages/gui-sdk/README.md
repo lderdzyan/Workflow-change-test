@@ -1,1 +1,0 @@
-# MeaningSphere GUI caching system
