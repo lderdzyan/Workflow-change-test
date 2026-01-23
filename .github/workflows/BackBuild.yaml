@@ -97,7 +97,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: lambda-folder
-          path: ${{ matrix.lambda }}
+          path: ${{ matrix.lambda }}.zip
       - name: Get Lambda names
         run: |
           ls
