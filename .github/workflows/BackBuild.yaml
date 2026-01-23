@@ -67,8 +67,7 @@ jobs:
         run: |
           cd backend/lambdas
           files=$(ls)
-          echo "FILES=$files" >> $GITHUB_ENV
-          for file in $FILES; do
+          for file in $files; do
             echo "Uploading $file"
             gh workflow upload-artifact --name "$file" --path "./$file" || echo "Failed"
           done
@@ -102,7 +101,7 @@ jobs:
         with:
           name: ${{ matrix.lambda }}.zip
           path: .
-          
+
       - name: Get Lambda names
         run: |
           ll
