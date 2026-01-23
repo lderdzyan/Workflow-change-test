@@ -98,7 +98,9 @@ jobs:
         with:
           name: lambda-folder
           path: ${{ matrix.lambda }}
-
+      - name: Get Lambda names
+        run: |
+          ls
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
         with:
