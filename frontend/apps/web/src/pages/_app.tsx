@@ -8,6 +8,7 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     setRender(true);
   }, []);
+   
   
   return render ? (
     <>
