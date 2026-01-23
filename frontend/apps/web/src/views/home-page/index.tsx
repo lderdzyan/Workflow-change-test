@@ -35,7 +35,7 @@ export default function Home() {
   return !loaded ? (
     <Grid
       container
-      sx={{ width: "100vw", height: "100vh", justifyContent: "center", alignItems: "center", position: "fixed", top: "0", left: "0", backgroundColor: "rgba( 255, 255, 255, 0.8 ) !important" }}
+      sx={{ width: "100vw", height: "100vh", justifyContent: "center", alignItems: "center", position: "fixed", top: "0", left: "0", backgroundColor: "rgba( 252, 255, 255, 0.8 ) !important" }}
     >
       <CircularProgress />
     </Grid>

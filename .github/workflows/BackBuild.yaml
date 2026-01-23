@@ -4,10 +4,11 @@ on:
   pull_request:
     branches:
       - dev
+      - 'hotfix-*'
     paths:
       - 'backend/**'
       - '!backend/**/*.md'
-      - 'hotfix-*'
+      
     types:
       - closed
   release:
@@ -47,9 +48,9 @@ jobs:
           node-version: 20
 
       - name: Install Infra dependencies
-        run: | 
+        run: |
           cd backend
-          npm install 
+          npm install
 
       - name: Build Lambdas
         run: |
@@ -66,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lambda-folder
-          path: backend/lambdas/
+          path: backend/lambdas/*.zip
 
       - name: Get Lambda names
         id: get-lambdas
@@ -91,16 +92,12 @@ jobs:
       matrix:
         lambda: ${{ fromJSON(needs.buildLambdas.outputs.lambda-names) }}
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Download Lambda folder
         uses: actions/download-artifact@v4
         with:
           name: lambda-folder
-          path: backend/lambdas/
+          path: lambdas/${{ matrix.lambda }}
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
@@ -117,20 +114,18 @@ jobs:
           role-chaining: true
           role-session-name: Secondary
 
-      - name: Deploy Lambda
-        if: github.event_name == 'release'
-        run: |
-          cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
-
-      - name: Deploy Lambda
+      - name: Deploy Lambda (dev)
         if: github.ref == 'refs/heads/dev'
         run: |
-          cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME}}/backend/${{vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
+
+      - name: Deploy Lambda (release tag)
+        if: github.event_name == 'release'
+        run: |
+
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
-          cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/hotfix-}/${{ matrix.lambda }}.zip
+          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip

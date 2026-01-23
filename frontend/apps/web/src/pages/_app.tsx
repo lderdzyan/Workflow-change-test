@@ -8,6 +8,10 @@ export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
     setRender(true);
   }, []);
+<<<<<<< HEAD
+   
+=======
+>>>>>>> 02c0ce7 (Test)
   
   return render ? (
     <>

@@ -8,8 +8,11 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0"
   },
+<<<<<<< HEAD
      
 
+=======
+>>>>>>> 02c0ce7 (Test)
   
   "dependencies": {
     "@repo/layout": "workspace:*",
