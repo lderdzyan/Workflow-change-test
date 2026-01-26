@@ -46,6 +46,17 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
+      - name: Set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ./package-lock.json
+
+      - name: Caching Packages
+        run: |
+          npm install
+          
       - name: Grubing functions names
         id: lambda-names
         run: |
@@ -78,7 +89,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: dev
-
       - name: Checkout release tag
         if: github.event_name == 'release'
         uses: actions/checkout@v6
@@ -123,7 +133,7 @@ jobs:
       - name: Deploy Lambda (dev)
         if: github.ref == 'refs/heads/dev'
         run: |
-          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
+          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/dev/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (release tag)
         if: github.event_name == 'release'
