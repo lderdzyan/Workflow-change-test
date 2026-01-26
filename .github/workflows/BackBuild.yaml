@@ -6,8 +6,8 @@ on:
       - dev
       - "hotfix-*"
     paths:
-      - "backend/**"
-      - "!backend/*.md"
+      - "msinfraops-dev-backend/code/**"
+      - "!msinfraops-dev-backend/code/**/*.md"
     types:
       - closed
   release:
@@ -22,7 +22,7 @@ jobs:
     name: Getting lambda functions names
     defaults:
       run:
-        working-directory: ./backend
+        working-directory: ./msinfraops-dev-backend/code
     if: github.event.pull_request.merged == true || github.event_name == 'release'
     runs-on: ubuntu-latest
     outputs:
@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: msinfraops-dev-backend/code/package-lock.json
 
       - name: Caching Packages
         run: |
@@ -60,9 +60,8 @@ jobs:
       - name: Grubing functions names
         id: lambda-names
         run: |
-          rm -r node_modules/
           LAMBDA_ARRAY=()
-          for f in ./* ; do
+          for f in ./src/functions/* ; do
             [ -d "$f" ] || continue
             FILE=$(basename "$f")
             NAME="${FILE}"
@@ -78,7 +77,7 @@ jobs:
     needs: getting-lambda-functions-names
     defaults:
       run:
-        working-directory: ./backend    
+        working-directory: ./msinfraops-dev-backend/code  
     runs-on: ubuntu-latest
     strategy:
       matrix:
