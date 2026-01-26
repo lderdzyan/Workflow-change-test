@@ -145,8 +145,3 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
           aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip
-
-
-
-
-
