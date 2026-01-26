@@ -6,8 +6,8 @@ on:
       - dev
       - "hotfix-*"
     paths:
-      - "msinfraops-dev-backend/code/**"
-      - "!msinfraops-dev-backend/code/**/*.md"
+      - "backend/**"
+      - "!backend/*.md"
     types:
       - closed
   release:
