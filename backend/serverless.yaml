@@ -5,9 +5,9 @@ provider:
 package:
   individually: true
 functions:
-  first:
+  function1:
     handler: function1.handler
-  second:
+  function2:
     handler: function2.handler
-  third: 
+  function3: 
     handler: function3.handler
