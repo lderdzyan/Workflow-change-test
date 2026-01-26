@@ -51,12 +51,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: ./package-lock.json
+          cache-dependency-path: backend/package-lock.json
 
       - name: Caching Packages
         run: |
           npm install
-          
+
       - name: Grubing functions names
         id: lambda-names
         run: |
