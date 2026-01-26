@@ -10,9 +10,9 @@ on:
       - "!backend/*.md"
     types:
       - closed
-  release:
-    types: [created]
-
+  push:
+    tags:
+      - "v*"
 permissions:
   id-token: write
   contents: read
@@ -34,17 +34,25 @@ jobs:
         with:
           ref: dev
 
-      - name: Checkout release tag
-        if: github.event_name == 'release'
+      - name: Checkout tag
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.ref_name }}
 
       - name: Checkout hotfix branch
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         uses: actions/checkout@v6
         with:
           ref: ${{ github.ref }}
+
+      - name: Create Release for Tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
 
       - name: Set up node
         uses: actions/setup-node@v4
@@ -91,11 +99,11 @@ jobs:
         with:
           ref: dev
       - name: Checkout release tag
-        if: github.event_name == 'release'
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.tag_name }}
-
+          ref: ${{ github.ref_name }}
+          
       - name: Checkout hotfix branch
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         uses: actions/checkout@v6
@@ -107,7 +115,6 @@ jobs:
         with:
           node-version: 20
           
-
       - name: Installing Infra dependencies
         run: |
           npm install
@@ -137,9 +144,9 @@ jobs:
           aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/dev/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (release tag)
-        if: github.event_name == 'release'
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
+          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/tags/}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
