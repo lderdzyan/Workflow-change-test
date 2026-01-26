@@ -60,6 +60,7 @@ jobs:
       - name: Grubing functions names
         id: lambda-names
         run: |
+          rm -r node_modules/
           LAMBDA_ARRAY=()
           for f in ./* ; do
             [ -d "$f" ] || continue
