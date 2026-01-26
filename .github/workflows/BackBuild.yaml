@@ -43,6 +43,47 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
+      - name: Get Lambda names
+        id: get-lambdas
+        run: |
+          LAMBDA_ARRAY=()
+          for f in ./backend/*; do
+            [ -d "$f" ] || continue
+            FILE=$(basename "$f")
+            NAME="${FILE}"
+            LAMBDA_ARRAY+=("\"$NAME\"")
+          done
+          IFS=,
+          JSON="[${LAMBDA_ARRAY[*]}]"
+          echo "names=$JSON" >> $GITHUB_OUTPUT
+          echo $JSON
+
+  LambdaToS3:
+    if: github.event.pull_request.merged == true || github.event_name == 'release'
+    needs: buildLambdas
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lambda: ${{ fromJSON(needs.buildLambdas.outputs.lambda-names) }}
+    steps:
+      - name: Checkout dev
+        if: github.ref == 'refs/heads/dev'
+        uses: actions/checkout@v6
+        with:
+          ref: dev
+
+      - name: Checkout release tag
+        if: github.event_name == 'release'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Checkout hotfix branch
+        if: startsWith(github.ref, 'refs/heads/hotfix-')
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -57,56 +98,10 @@ jobs:
           cd backend
           npx sls package
 
-      - name: Make directory for lambdas
-        run: |
-          cd backend
-          mkdir -p lambdas
-          cp ./.serverless/*.zip lambdas/
-
-      - name: Upload Lambda ZIPs individually
-        run: |
-          cd backend/lambdas
-          files=$(ls)
-          for file in $files; do
-            echo "Uploading $file"
-            gh workflow upload-artifact --name "$file" --path "./$file" || echo "Failed"
-          done
-
-      - name: Get Lambda names
-        id: get-lambdas
-        run: |
-          cd backend
-          LAMBDA_ARRAY=()
-          for f in lambdas/*.zip; do
-            [ -e "$f" ] || continue
-            FILE=$(basename "$f")
-            NAME="${FILE%.zip}"
-            LAMBDA_ARRAY+=("\"$NAME\"")
-          done
-          IFS=,
-          JSON="[${LAMBDA_ARRAY[*]}]"
-          echo "names=$JSON" >> $GITHUB_OUTPUT
-          echo $JSON
-
-  LambdaToS3:
-    needs: buildLambdas
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        lambda: ${{ fromJSON(needs.buildLambdas.outputs.lambda-names) }}
-    steps:
-
-      - name: Download Lambda
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.lambda }}.zip
-          path: .
-
       - name: Get Lambda names
         run: |
           ll
           cd backend && ll
-          cd lambdas && ll
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
@@ -127,16 +122,16 @@ jobs:
         if: github.ref == 'refs/heads/dev'
         run: |
           cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
+          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (release tag)
         if: github.event_name == 'release'
         run: |
           cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
+          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ github.event.release.tag_name }}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
           cd backend/lambdas/
-          aws s3 cp "${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip
+          aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip
