@@ -101,7 +101,8 @@ jobs:
       - name: Get Lambda names
         run: |
           ls
-          cd backend && ls
+          cd backend && ls -a
+          cd .serverless && ls
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
