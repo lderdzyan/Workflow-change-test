@@ -121,7 +121,7 @@ jobs:
       - name: Deploy Lambda (dev)
         if: github.ref == 'refs/heads/dev'
         run: |
-          cd backend/lambdas/
+          cd backend/
           aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${{ vars.FOLDER_NAME}}/${{ matrix.lambda }}.zip
 
       - name: Deploy Lambda (release tag)
