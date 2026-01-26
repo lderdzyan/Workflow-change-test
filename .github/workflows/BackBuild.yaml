@@ -100,8 +100,8 @@ jobs:
 
       - name: Get Lambda names
         run: |
-          ll
-          cd backend && ll
+          ls
+          cd backend && ls
 
       - name: Assume federated role
         uses: aws-actions/configure-aws-credentials@v4
