@@ -46,19 +46,12 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Cache Node Modules
-        id: cache-npm
-        uses: actions/cache@v4
+      - name: Caching npm 
+        uses: actions/setup-node@v4
         with:
-          path: ./backend/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('backend/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version: 20
+          cache: npm
 
-      - name: Installing Infra dependencies
-        if: steps.cache-npm.outputs.cache-hit != 'true'
-        run: |
-          npm install
       - name: Grubing functions names
         id: lambda-names
         run: |
@@ -108,7 +101,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          
 
       - name: Installing Infra dependencies
         run: |
