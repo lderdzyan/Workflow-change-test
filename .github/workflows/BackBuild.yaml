@@ -46,12 +46,6 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Caching npm 
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
       - name: Grubing functions names
         id: lambda-names
         run: |
