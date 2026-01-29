@@ -69,12 +69,14 @@ jobs:
         id: lambda_names
         run: |
           S3_ARRAY=()
-          aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/ --recursive | awk '{print $4}' | while read f; do
+
+          while read f; do
             NAME=$(basename "$f")
             S3_ARRAY+=("\"$NAME\"")
-          done
+          done < <(aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/ --recursive | awk '{print $4}')
+
           IFS=,
           JSON="[${S3_ARRAY[*]}]"
+
           echo "names=$JSON" >> $GITHUB_OUTPUT
           echo $JSON
-    
