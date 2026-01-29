@@ -35,6 +35,8 @@ permissions:
 jobs:
   check-version:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'  }}
+    outputs:
+      lambda-names: ${{ steps.lambda-names.outputs.names }}
     runs-on: ubuntu-latest
     steps:
       - name: Resolve variables
@@ -55,4 +57,24 @@ jobs:
         run: |
           echo "VERSION=${{ env.VERSION }}"
           echo "INSTANCE=${{ env.INSTANCE }}"
+      
+      - name: Assuming federated role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_FED_ROLE_ARN }}
+          role-session-name: Federal     
 
+      - name:  Grubing functions names
+        id: lambda_names
+        run: |
+          S3_ARRAY=()
+          aws s3 ls s3://my-bucket --recursive | awk '{print $4}' | while read f; do
+            NAME=$(basename "$f")
+            S3_ARRAY+=("\"$NAME\"")
+          done
+          IFS=,
+          JSON="[${S3_ARRAY[*]}]"
+          echo "names=$JSON" >> $GITHUB_OUTPUT
+          echo $JSON
+    
