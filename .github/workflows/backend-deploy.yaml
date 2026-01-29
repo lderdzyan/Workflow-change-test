@@ -68,11 +68,13 @@ jobs:
       - name:  Grubing functions names
         id: lambda_names
         run: |
-          JSON=$(aws s3api list-objects-v2 \
-            --bucket my-bucket \
-            --query 'Contents[].Key' \
-            --output json)
-
+          S3_ARRAY=()
+          aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/ --recursive | awk '{print $4}' | while read f; do
+            NAME=$(basename "$f")
+            S3_ARRAY+=("\"$NAME\"")
+          done
+          IFS=,
+          JSON="[${S3_ARRAY[*]}]"
           echo "names=$JSON" >> $GITHUB_OUTPUT
           echo $JSON
-          
+    
