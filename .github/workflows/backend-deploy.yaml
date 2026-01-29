@@ -1,4 +1,4 @@
-name: "[Backend] Deploy Lambda Functions"
+name: "Deploy Backend Lambda Functions"
 
 
 on:
@@ -33,7 +33,8 @@ permissions:
   contents: read
 
 jobs:
-  check-version:
+  getting-lambda-functions-names:
+    name: Getting lambda functions names
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'  }}
     outputs:
       lambda-names: ${{ steps.lambda-names.outputs.names }}
@@ -69,14 +70,40 @@ jobs:
         id: lambda_names
         run: |
           S3_ARRAY=()
-
           while read f; do
             NAME=$(basename "$f")
             S3_ARRAY+=("\"$NAME\"")
           done < <(aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/ --recursive | awk '{print $4}')
-
           IFS=,
           JSON="[${S3_ARRAY[*]}]"
-
           echo "names=$JSON" >> $GITHUB_OUTPUT
           echo $JSON
+  download-lambda-from-s3:
+    name: Downloading Lambda from S3
+    needs: getting-lambda-functions-names
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lambda: ${{ fromJSON(needs.getting-lambda-functions-names.outputs.lambda-names) }}
+    steps:
+
+      - name: Assuming federated role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_FED_ROLE_ARN }}
+          role-session-name: Federal     
+
+      - name: Create folder
+        run: mkdir -p ./lambdas
+
+      - name: Copy Lambda Function Zip from S3
+        run: |
+          echo "Downloading ${{ matrix.lambda }}..."
+          aws s3 cp s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/${{ matrix.lambda }} ./lambdas/${{ matrix.lambda }}
+
+      - name: Upload Lambda as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.lambda }}     
+          path: ./lambdas/${{ matrix.lambda }} 
