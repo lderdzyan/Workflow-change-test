@@ -1,13 +1,28 @@
 name: Deploy Backend
 
 on:
+  pull_request:
+    branches:
+      - dev
+      - "hotfix-*"
+    paths:
+      - "backend/**"
+      - "!backend/*.md"
+    types:
+      - closed
+  push:
+    tags:
+      - "v*"
   workflow_run:
     workflows: ["Build Serverless Backend Lambda Functions"]
     types: [completed] 
 
 jobs:
-  deploy:
-    if: github.event.workflow_run.conclusion == 'success' 
+  test:
+    if: >      
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) || 
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - run: echo "deploy backend"
