@@ -1,0 +1,58 @@
+name: "[Backend] Deploy Lambda Functions"
+
+
+on:
+  workflow_run:
+    workflows: ["Build Serverless Backend Lambda Functions"]
+    types: [completed] 
+
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: "Choose the version"
+        required: true
+        default: "dev"
+      instance:
+        type: choice
+        description: "Choose the instance"
+        required: true
+        default: "dev"
+        options:
+          - dev
+          - ua
+          - preprod
+          - prod
+
+env:
+  VERSION: dev
+  INSTANCE: dev
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  check-version:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve variables
+        shell: bash
+        run: |
+          INPUT_VERSION="${{ inputs.version || '' }}"
+          INPUT_INSTANCE="${{ inputs.instance || '' }}"
+
+          VERSION="${INPUT_VERSION:-dev}"
+          INSTANCE="${INPUT_INSTANCE:-dev}"
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "INSTANCE=$INSTANCE" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v6
+
+      - name: Use resolved values (bash)
+        run: |
+          echo "VERSION=${{ env.VERSION }}"
+          echo "INSTANCE=${{ env.INSTANCE }}"
+
