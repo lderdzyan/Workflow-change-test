@@ -117,7 +117,7 @@ jobs:
         run: mkdir -p ./lambdas
 
       - name: Download Lambda archive from S3
-        run: aws s3 cp s3://${{ vars.S3_BUCKET_ZIP }}/backend/${{ needs.getting-lambda-functions-names.outputs.version }}/${{ matrix.lambda }}.zip ./lambdas/${{ matrix.lambda }}.zip
+        run: aws s3 cp s3://${{ secrets.BUCKET_NAME }}/backend/${{ needs.getting-lambda-functions-names.outputs.version }}/${{ matrix.lambda }}.zip ./lambdas/${{ matrix.lambda }}.zip
 
       - name: Upload Lambda archive as artifact
         uses: actions/upload-artifact@v4
