@@ -1,7 +1,7 @@
 export const handler = async () => {
   const response = {
     statusCode: 200,
-    body: JSON.stringify('Hi hi hi hihi nothing changed?'),
+    body: JSON.stringify('Hi hi hi hihi nothing changed? NO'),
   };
   return response;
 };
