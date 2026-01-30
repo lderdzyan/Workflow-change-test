@@ -39,7 +39,6 @@ jobs:
     steps:
       - name: Resolve version and instance inputs (dispatch)
         id: resolve
-        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
