@@ -44,7 +44,6 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
             echo "instance=${{ inputs.instance }}" >> $GITHUB_OUTPUT
-            exit 0
           fi
 
           EVENT="${{ github.event.workflow_run.event }}"
