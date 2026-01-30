@@ -1,10 +1,9 @@
-name: "Deploy Backend Lambda Functions"
-
+name: "Backend - Deploy Lambda Functions"
 
 on:
   workflow_run:
-    workflows: ["Build Serverless Backend Lambda Functions"]
-    types: [completed] 
+    workflows: ["Backend - Build and Archive Lambda Functions"]
+    types: [completed]
 
   workflow_dispatch:
     inputs:
@@ -24,86 +23,130 @@ on:
           - preprod
           - prod
 
-env:
-  VERSION: dev
-  INSTANCE: dev
-
 permissions:
   id-token: write
   contents: read
 
 jobs:
   getting-lambda-functions-names:
-    name: Getting lambda functions names
+    name: Resolve inputs and list Lambda functions
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'  }}
     outputs:
       lambda-names: ${{ steps.lambda-names.outputs.names }}
+      instance: ${{ steps.resolve.outputs.instance }}
+      version: ${{ steps.resolve.outputs.version }}
     runs-on: ubuntu-latest
     steps:
-      - name: Resolve variables
+      - name: Resolve version and instance inputs (dispatch)
+        id: resolve
+        if: github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
-          INPUT_VERSION="${{ inputs.version || '' }}"
-          INPUT_INSTANCE="${{ inputs.instance || '' }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "instance=${{ inputs.instance }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
-          VERSION="${INPUT_VERSION:-dev}"
-          INSTANCE="${INPUT_INSTANCE:-dev}"
+          EVENT="${{ github.event.workflow_run.event }}"
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
 
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "INSTANCE=$INSTANCE" >> "$GITHUB_ENV"
+          if [[ "$EVENT" == "pull_request" && "$BRANCH" == "dev" ]]; then
+            echo "version=dev" >> $GITHUB_OUTPUT
+            echo "instance=dev" >> $GITHUB_OUTPUT
+          else
+            TAG="${{ github.event.workflow_run.head_sha }}"
+            VERSION="${{ github.event.workflow_run.head_branch }}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "instance=ua" >> $GITHUB_OUTPUT
+          fi
 
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-      - name: Use resolved values (bash)
-        run: |
-          echo "VERSION=${{ env.VERSION }}"
-          echo "INSTANCE=${{ env.INSTANCE }}"
-      
       - name: Assuming federated role
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_FED_ROLE_ARN }}
-          role-session-name: Federal     
+          role-session-name: Federal
 
-      - name:  Grubing functions names
+      - name: List Lambda function names from S3
         id: lambda-names
         run: |
           S3_ARRAY=()
           while read f; do
             NAME=$(basename "$f")
+            NAME="${NAME%.*}"
             S3_ARRAY+=("\"$NAME\"")
-          done < <(aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/ --recursive | awk '{print $4}')
+          done < <(aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ steps.resolve.outputs.version }}/ --recursive | awk '{print $4}')
           IFS=,
           JSON="[${S3_ARRAY[*]}]"
           echo "names=$JSON" >> $GITHUB_OUTPUT
-          echo $JSON
+
   download-lambda-from-s3:
-    name: Downloading Lambda from S3
+    name: Download Lambda archives from S3
     needs: getting-lambda-functions-names
     runs-on: ubuntu-latest
     strategy:
       matrix:
         lambda: ${{ fromJSON(needs.getting-lambda-functions-names.outputs.lambda-names) }}
     steps:
-
       - name: Assuming federated role
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_FED_ROLE_ARN }}
-          role-session-name: Federal     
+          role-session-name: Federal
 
-      - name: Create folder
+      - name: Create lambdas directory
         run: mkdir -p ./lambdas
 
-      - name: Copy Lambda Function Zip from S3
-        run: |
-          echo "Downloading ${{ matrix.lambda }}..."
-          aws s3 cp s3://${{ secrets.BUCKET_NAME }}/backend/${{ env.VERSION }}/${{ matrix.lambda }} ./lambdas/${{ matrix.lambda }}
+      - name: Download Lambda archive from S3
+        run: aws s3 cp s3://${{ secrets.BUCKET_NAME }}/backend/${{ needs.getting-lambda-functions-names.outputs.version }}/${{ matrix.lambda }}.zip ./lambdas/${{ matrix.lambda }}.zip
 
-      - name: Upload Lambda as artifact
+      - name: Upload Lambda archive as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.lambda }}     
-          path: ./lambdas/${{ matrix.lambda }} 
+          name: ${{ matrix.lambda }}
+          path: ./lambdas/${{ matrix.lambda }}.zip
+
+  deploy-lambda-function:
+    name: Deploy Lambda functions
+    needs: [getting-lambda-functions-names, download-lambda-from-s3]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lambda: ${{ fromJSON(needs.getting-lambda-functions-names.outputs.lambda-names) }}
+    steps:
+      - name: Assuming federated role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_FED_ROLE_ARN }}
+          role-session-name: Federal
+
+      - name: Download Lambda archive from artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ matrix.lambda }}
+
+      - name: Update Lambda function code
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ matrix.lambda }} \
+            --zip-file fileb://lambdas/${{ matrix.lambda }}.zip
+
+      - name: Merge and set Lambda environment variables
+        env:
+          NEW_VARS: '{"MS_VERSION":"${{ needs.getting-lambda-functions-names.outputs.version }}"}'
+        run: |
+          EXISTING=$(aws lambda get-function-configuration \
+            --function-name ${{ matrix.lambda }} \
+            --query 'Environment.Variables' \
+            --output json) || EXISTING='{}'
+          EXISTING=${EXISTING:-'{}'}
+          MERGED=$(echo "$EXISTING" "$NEW_VARS" | jq -s '.[0] // {} | . * .[1]')
+          aws lambda update-function-configuration \
+            --function-name ${{ matrix.lambda }} \
+            --environment "{\"Variables\":$MERGED}"
