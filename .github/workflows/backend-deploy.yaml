@@ -96,6 +96,7 @@ jobs:
           done < <(aws s3 ls s3://${{ secrets.BUCKET_NAME }}/backend/${{ steps.resolve.outputs.version }}/ --recursive | awk '{print $4}')
           IFS=,
           JSON="[${S3_ARRAY[*]}]"
+          echo $JSON
           echo "names=$JSON" >> $GITHUB_OUTPUT
 
   download-lambda-from-s3:
@@ -129,7 +130,6 @@ jobs:
     name: Deploy Lambda functions
     needs: [getting-lambda-functions-names, download-lambda-from-s3]
     runs-on: ubuntu-latest
-    environment: ${{ needs.getting-lambda-functions-names.outputs.instance }}
     strategy:
       matrix:
         lambda: ${{ fromJSON(needs.getting-lambda-functions-names.outputs.lambda-names) }}
