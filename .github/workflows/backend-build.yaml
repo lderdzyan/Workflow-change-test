@@ -142,17 +142,17 @@ jobs:
           role-chaining: true
           role-session-name: Secondary
 
-      - name: Deploy Lambda (dev)
+      - name: Uploading Lambda (dev)
         if: github.ref == 'refs/heads/dev'
         run: |
           aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/dev/${{ matrix.lambda }}.zip
 
-      - name: Deploy Lambda (release tag)
+      - name: Uploading Lambda (release tag)
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/tags/}/${{ matrix.lambda }}.zip
 
-      - name: Deploy Lambda (hotfix)
+      - name: Uploading Lambda (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         run: |
           aws s3 cp "./.serverless/${{ matrix.lambda }}.zip" s3://${{ secrets.BUCKET_NAME }}/backend/${GITHUB_REF#refs/heads/}/${{ matrix.lambda }}.zip

@@ -10,8 +10,9 @@ on:
       - '!frontend/**/*.md'
     types:
       - closed
-  release:
-    types: [created] 
+  push:
+    tags:
+      - "v*"
 
 permissions:
   id-token: write
@@ -30,17 +31,25 @@ jobs:
         with:
           ref: dev
 
-      - name: Checkout release tag
-        if: github.event_name == 'release'
+      - name: Checkout tag
+        if: startsWith(github.ref, 'refs/tags/')
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.ref_name }}
 
       - name: Checkout hotfix branch
         if: startsWith(github.ref, 'refs/heads/hotfix-')
         uses: actions/checkout@v6
         with:
           ref: ${{ github.ref }}
+
+      - name: Create Release for Tag
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
 
       - name: Get Frontend App Names
         id: get-frontend-apps
@@ -108,10 +117,10 @@ jobs:
           aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${{ vars.FOLDER_NAME}}/${{ matrix.app }}.zip
 
       - name: Deploy Apps (tags)
-        if: github.event_name == 'release'
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           cd frontend/apps/${{ matrix.app }}
-          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${{ github.event.release.tag_name }}/${{ matrix.app }}.zip
+          aws s3 cp "${{ matrix.app }}.zip" s3://${{ secrets.BUCKET_NAME }}/frontend/${GITHUB_REF#refs/tags/}/${{ matrix.app }}.zip
 
       - name: Deploy Apps (hotfix)
         if: startsWith(github.ref, 'refs/heads/hotfix-')

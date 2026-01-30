@@ -51,7 +51,7 @@ jobs:
           echo "Checking version: $VERSION"
 
           if aws s3 ls "s3://$BUCKET/backend/${{ inputs.version }}/" > /dev/null 2>&1; then
-            echo "Version exists ✔"
+            echo "Version exists"
           else
             echo "[X] Wrong Version Number:"
             exit 2
@@ -157,7 +157,7 @@ jobs:
           NEW_VARS: '{"MS_VERSION":"${{ needs.getting-lambda-functions-names.outputs.version }}"}'
         run: |
           EXISTING=$(aws lambda get-function-configuration \
-            --function-name ${{ matrix.lambda }} \
+            --function-name ${{ matrix.lambda }}-${{ needs.getting-lambda-functions-names.outputs.instance }} \
             --query 'Environment.Variables' \
             --output json) || EXISTING='{}'
           EXISTING=${EXISTING:-'{}'}
